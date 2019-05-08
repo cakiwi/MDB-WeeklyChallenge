@@ -1,0 +1,62 @@
+[
+  {
+    "$geoNear": {
+      "near": {
+        "type": "Point", 
+        "coordinates": [
+          166.6863, -77.8419
+        ]
+      }, 
+      "distanceField": "distance", 
+      "limit": 25000, 
+      "maxDistance": 1000000
+    }
+  }, {
+    "$addFields": {
+      "year": {
+        "$year": {
+          "$dateFromString": {
+            "dateString": "$year"
+          }
+        }
+      }
+    }
+  }, {
+    "$match": {
+      "year": {
+        "$gte": 1970
+      }
+    }
+  }, {
+    "$bucket": {
+      "groupBy": "$year", 
+      "boundaries": [
+        1970, 1980, 1990, 2000, 2010, 2019
+      ], 
+      "default": "notset", 
+      "output": {
+        "stdDev": {
+          "$stdDevPop": "$mass"
+        }, 
+        "avg": {
+          "$avg": "$mass"
+        }
+      }
+    }
+  }, {
+    "$group": {
+      "_id": null, 
+      "decades": {
+        "$push": {
+          "decade": "$_id", 
+          "stdDeviation": "$stdDev", 
+          "average": "$avg"
+        }
+      }
+    }
+  }, {
+    "$project": {
+      "_id": 0
+    }
+  }
+]
